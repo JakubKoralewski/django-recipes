@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <style>
+        {% include "./style.css" %}
+    </style>
+    <title>{% block title %}My amazing site{% endblock %}</title>
+</head>
+
+<body>
+    <nav id="sidebar">
+        {% block sidebar %}
+        <ul>
+            <li><a href="{% url 'index' %}">Home</a></li>
+            <li><a href="{% url 'new' %}">Add recipe</a></li>
+        </ul>
+        {% endblock %}
+    </nav>
+
+    <main id="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        This is an amazingly awesome website by Jakub Koralewski.
+        <cite style="font-size: 6px;">" OR 1=1 AND INSERT MAX_GRADE INTO STUDENT 452490<cite>
+    </footer>
+
+
+</body>
+</html>

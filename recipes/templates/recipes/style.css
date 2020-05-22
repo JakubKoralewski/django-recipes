@@ -1,0 +1,108 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body, html {
+  height: 100%;
+  width: 100%;
+}
+
+html {
+  font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+    overflow-x: hidden;
+}
+
+nav {
+  font-size: 2rem;
+  font-weight: 800;
+}
+nav ul {
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  min-width: 30%;
+    justify-content: space-evenly;
+}
+
+a {
+  text-decoration: none;
+  transition: color 2s ease-in-out;
+}
+
+a:hover {
+  color: blue;
+}
+
+.recipe > a{
+  display: flex;
+  flex-direction: column;
+    width: 100%;
+  height: 100%;
+  font-weight: 800;
+}
+.recipe:nth-of-type(3n) > a {
+  color: red;
+  background-color: lightyellow;
+}
+.recipe:nth-of-type(3n + 1) > a {
+  color: greenyellow;
+  background-color: pink;
+}
+.recipe:nth-of-type(3n + 2) > a {
+  color: aliceblue;
+  background-color: cadetblue;
+}
+
+.center-absolute {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.recipe > a > .name {
+  font-size: calc(1.5rem + 2vw);
+  transition: transform 1s ease-in-out;
+  transform-origin: 50% 40%;
+  text-shadow: 5px 5px 5px black;
+  transform: translate(-50%, -50%);
+}
+
+.recipe > a:hover > .name {
+  transform: scale(1.2) translate(-50%, -50%);
+}
+main {
+  padding: 2rem 4rem;
+    min-height: 100%;
+}
+main > ul {
+ display: grid;
+  grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: minmax(100px, 30vh);
+  grid-gap: 2rem;
+}
+
+main > ul > li {
+  position: relative;
+  list-style: none;
+  height: 100%;
+}
+main > ul > li img {
+  height: 100%;
+  width: 100%;
+    object-fit: cover;
+}
+
+main > ul > li:nth-of-type(1) {
+  grid-row: 1/ span 2;
+  align-self: start;
+}
+
+.recipe-full #ingredients-container{
+  margin-left: 1rem;
+}
+.recipe-full #ingredient{
+  margin-left: 1rem;
+}
+

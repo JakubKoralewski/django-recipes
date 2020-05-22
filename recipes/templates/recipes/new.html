@@ -1,0 +1,319 @@
+{% extends "./base.html" %}
+
+{% block content %}
+<h1>Add recipe</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+
+<style>
+    .steps {
+        margin-top: 2rem;
+    }
+
+    #ingredients {
+        margin-top: 0.5rem;
+        margin-left: 2rem;
+    }
+</style>
+
+<form action="{% url 'new' %}" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="field-wrapper">
+        {{ field.errors }}
+        {{ field.label_tag }} {{ field }}
+        {% if field.help_text %}
+        <p class="help">{{ field.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    <div class="steps">
+        <div id="step-adder">
+            <label for="s-desc">Step description:</label>
+            <textarea id="s-desc" required></textarea>
+            <div id="ingredients-adder">
+                <label for="i-name">Ingredient name:</label>
+                <input type="text" id="i-name">
+
+                <label for="i-photo">Ingredient photo:</label>
+                <input type="url" id="i-photo">
+
+                <label for="i-amount">Quantity: </label>
+                <input type="number" id="i-amount" step="0.1" min="0" max="10000000000000" value="0.1">
+
+                <label for="i-amount-type"></label>
+                <select id="i-amount-type">
+                    {% for type in amount_types %}
+                    <option value="{{type.0}}">{{type.1}}</option>
+                    {% endfor %}
+                </select>
+                <label for="i-type"></label>
+                <select id="i-type">
+                    {% for type in ingredient_types %}
+                        <option value="{{type.0}}">{{type.1}}</option>
+                    {% endfor %}
+                </select>
+                <button onclick="addIngredient(event, this)" type="button">Add this ingredient</button>
+                <ol id="ingredients-list" style="margin: 1rem 2rem;">
+                    No ingredients were specified for this step yet.
+                </ol>
+            </div>
+            <button onclick="addStep(event, this)" type="button" value="">Add this step</button>
+        </div>
+        <ol id="step-list" style="margin: 1rem 2rem;">
+            No steps specified for this recipe yet.
+        </ol>
+    </div>
+    <input type="submit" value="Submit">
+</form>
+<script>
+    let newStepNumberWillBe = 0
+    const ingredient = {
+        "i-name": 'name',
+        "i-photo": 'photo',
+        "i-amount": 'amount',
+        "i-amount-type": 'amountType',
+        "i-type": 'type'
+    }
+    const step = {
+        "s-desc": 'description',
+    }
+
+    function getCustomForm(schema, parentElem) {
+        let {elem, ...inputs} = schema
+        const actualInputs = {}
+        console.log(parentElem.children)
+        Array.from(parentElem.children).forEach(
+            (elem) => {
+                if (elem.id in inputs) {
+                    actualInputs[inputs[elem.id]] = elem
+                }
+            }
+        )
+        return actualInputs;
+    }
+
+    const steps = []
+    const stepsElem = document.querySelector(".steps")
+    const stepAdder = stepsElem.querySelector("#step-adder")
+    const ingredientAdder = stepAdder.querySelector("#ingredients-adder")
+    const stepListElem = document.querySelector("#step-list")
+    let stepListOriginalText = stepListElem.innerText
+    const ingredientListElem = document.querySelector("#ingredients-list")
+    let ingredientListOriginalText = ingredientListElem.innerText
+
+    const formElem = document.querySelector("form")
+
+    function addStep(e, elem) {
+        let parsed = getCustomForm(step, stepAdder)
+        console.log("Adding step", parsed)
+        let newObj = {}
+        Object.keys(parsed).map((key, i) => {
+            newObj[key] = getValueOfInput(parsed[key])
+        })
+        if (newStepNumberWillBe + 1 > steps.length) {
+            steps[newStepNumberWillBe] = new Step(newObj)
+        } else {
+            steps[newStepNumberWillBe].assignObject(newObj)
+        }
+        insertStepIntoDOM(steps[newStepNumberWillBe], newStepNumberWillBe)
+        console.log("steps:", steps)
+        newStepNumberWillBe++
+    }
+
+    class Step {
+        constructor(params) {
+            this.assignObject(params)
+        }
+
+        assignObject({description = "", ingredients = []}) {
+            this.description = description
+            this.ingredients = this.ingredients && this.ingredients.length !== 0 ? this.ingredients : ingredients
+        }
+    }
+
+    function getValueOfInput(input) {
+        return input.value;
+    }
+
+    function removeElem(event, index, elem) {
+        steps[index] = null
+        const toBeRemoved = stepListElem.querySelector(`li[data-index="${index}"]`)
+        stepListElem.removeChild(toBeRemoved)
+        if (!stepListElem.querySelector('li')) {
+            stepListElem.innerHTML = stepListOriginalText
+        }
+        const toBeRemovedFromForm = formElem.querySelector(`input.input-step[data-index="${index}"]`)
+        formElem.removeChild(toBeRemovedFromForm)
+    }
+
+    function insertStepIntoDOM(step, index) {
+        if (!stepListElem.querySelector('li')) {
+            stepListElem.innerHTML = ''
+        }
+
+        let ingredientsHTML
+        console.log("adding step: ", step)
+        if (step.ingredients.length !== 0) {
+            ingredientsHTML = step.ingredients.filter(x => !!x).map(ing => {
+                if (!ing) {
+                    return ``
+                }
+                return `
+             <li id="ingredient-src">
+                 <p id="ingredient-name">${ing.name}</p>
+                 <p id="ingredient-photo">${ing.photo}</p>
+                 <p id="ingredient-amount">${ing.amount}</p>
+                 <p id="ingredient-amount-type">${ing.amountType}</p>
+                 <p id="ingredient-type">${ing.type}</p>
+             </li>
+            `
+            }).join('\n')
+        } else {
+            ingredientsHTML = `No ingredients specified for this step!`
+        }
+        const HTMLStep = `
+                <div class="step">
+                    <p id="desc-src">${step.description}</p>
+                    <div id="ingredients-src">
+                        <ul>
+                        ${ingredientsHTML}
+                        </ul>
+                    </div>
+                    <button type="button" onclick="removeElem(event, ${index}, this)">Remove</button>
+                </div>
+            `
+
+        let ifExists = stepListElem.querySelector(`li[data-index="${index}"]`)
+        if (ifExists) {
+            ifExists.innerHTML = HTMLStep
+        } else {
+            const li = document.createElement("li")
+            li.dataset.index = index
+            li.innerHTML = HTMLStep
+            stepListElem.appendChild(li)
+        }
+        ingredientListElem.innerHTML = ingredientListOriginalText
+
+        const HTMLFormStep = `
+                <input
+                 class="input-step"
+                  data-index="${index}"
+                  name="step-${index}-description"
+                   value="${step.description}"
+                   style="display: none;"
+                >
+            `
+        let ifExistsFormElem = formElem.querySelector(`input.input-step[data-index="${index}"]`)
+        if (ifExistsFormElem) {
+            ifExistsFormElem.value = step.description
+        } else {
+            formElem.insertAdjacentHTML('beforeend', HTMLFormStep)
+        }
+    }
+
+    function removeIngredient(event, index, elem) {
+        console.log("removing ingredient index: ", index)
+        let thisIngredientsStep = steps[newStepNumberWillBe]
+        if (thisIngredientsStep) {
+            thisIngredientsStep.ingredients[index] = null
+            if (thisIngredientsStep.ingredients.every(ing => ing === null)) {
+                thisIngredientsStep.ingredients = []
+            }
+        }
+        const toBeRemoved = ingredientListElem.querySelector(`li[data-index="${index}"]`)
+        ingredientListElem.removeChild(toBeRemoved)
+        if (!ingredientListElem.querySelector('li')) {
+            ingredientListElem.innerHTML = ingredientListOriginalText
+        }
+        const formElems = formElem.querySelectorAll(`input.ingredient-step[data-index="${index}"]`)
+        formElems.forEach(elem => formElem.removeChild(elem))
+    }
+
+    function insertIngredientIntoDOM(ingredient, index, stepIndex) {
+        if (!ingredientListElem.querySelector('li')) {
+            ingredientListElem.innerHTML = ''
+        }
+        let ingredientsHTML = `No ingredients specified for this step.`
+        console.log("adding ingredient: ", ingredient, index)
+        const HTMLIngredient = `
+                 <p id="ingredient-name">${ingredient.name}</p>
+                 <p id="ingredient-photo">${ingredient.photo}</p>
+                 Amount: <p id="ingredient-amount">${ingredient.amount}</p>
+                 <p id="ingredient-amount-type">${ingredient.amountType}</p>
+                <button type="button" onclick="removeIngredient(event, ${index}, this)">Remove</button>
+            `
+        let allExistingIngredients = ingredientListElem.querySelectorAll('li')
+        let ifExists
+        if (allExistingIngredients.length > 0) {
+            ifExists = Array.from(allExistingIngredients).find(li => li.dataset.index === index)
+        }
+        console.log("ifExists", ifExists)
+        if (ifExists) {
+            ifExists.innerHTML = HTMLIngredient
+        } else {
+            ingredientListElem.insertAdjacentHTML('beforeend', `<li data-index="${index}">${HTMLIngredient}</li>`)
+        }
+        //FIXME
+        const HTMLFormIngredient = `
+                <input
+                 class="ingredient-step"
+                  data-index="${index}"
+                  name="step-${stepIndex}-ingredient-name-${index}"
+                   value="${ingredient.name}"
+                   style="display: none;"
+                >
+                <input
+                 class="ingredient-step"
+                  data-index="${index}"
+                  name="step-${stepIndex}-ingredient-photo-${index}"
+                   value="${ingredient.photo}"
+                   style="display: none;"
+                >
+                <input
+                 class="ingredient-step"
+                  data-index="${index}"
+                  name="step-${stepIndex}-ingredient-amount-${index}"
+                   value="${ingredient.amount}"
+                   style="display: none;"
+                >
+                <input
+                 class="ingredient-step"
+                  data-index="${index}"
+                  name="step-${stepIndex}-ingredient-amount_type-${index}"
+                   value="${ingredient.amountType}"
+                   style="display: none;"
+                >
+                <input
+                 class="ingredient-step"
+                  data-index="${index}"
+                  name="step-${stepIndex}-ingredient-type-${index}"
+                   value="${ingredient.type}"
+                   style="display: none;"
+                >
+            `
+        formElem.insertAdjacentHTML('beforeend', HTMLFormIngredient)
+    }
+
+    function addIngredient(e, elem) {
+        let parsed = getCustomForm(ingredient, ingredientAdder)
+        let newIngredient = {}
+        Object.keys(parsed).map((key, i) => newIngredient[key] = getValueOfInput(parsed[key]))
+        console.log("Adding ingredient", parsed)
+        if (newIngredient.name && !newIngredient.amount) {
+            window.alert("Please specify ingredient quantity!")
+            return;
+        }
+        if (steps[newStepNumberWillBe] === undefined) {
+            steps[newStepNumberWillBe] = new Step({})
+        }
+        steps[newStepNumberWillBe].ingredients.push(newIngredient)
+        console.log("steps: ", steps)
+        insertIngredientIntoDOM(newIngredient, steps[newStepNumberWillBe].ingredients.length - 1, newStepNumberWillBe)
+    }
+
+</script>
+
+
+{% endblock %}

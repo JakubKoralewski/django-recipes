@@ -1,0 +1,24 @@
+{% extends "./base.html" %}
+
+{% block title %}
+    Recipe site by 452490
+{% endblock %}
+
+{% block content %}
+    {% if latest_recipes %}
+        <ul>
+            {% for recipe in latest_recipes %}
+                <li class="recipe">
+                    <a href="/recipes/{{recipe.id}}/">
+                        <img src="{{recipe.photo}}" alt="recipe photo unavailable" />
+                        <span class="name center-absolute">{{recipe.name}}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <aside>
+            No recipes available.
+        </aside>
+    {% endif %}
+{% endblock %}

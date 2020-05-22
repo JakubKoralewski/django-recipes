@@ -1,0 +1,50 @@
+{% extends "./base.html" %}
+
+{% block title %}
+    {{ recipe.name }} - Recipe site by 452490
+{% endblock %}
+
+{% block content %}
+    <div class="recipe-full">
+        <span id="obv">You ({{ about_user }}) are looking at a recipe:</span>
+        <div>
+            <h3>
+                {{ recipe.name }}
+            </h3>
+            <span>by {{ recipe.author.name }}</span>
+            <span>Published: {{ recipe.pub_date | date }}</span>
+        </div>
+        <img src="{{ recipe.photo }}" alt="recipe photo"/>
+        <p>
+            {{ recipe.description }}
+        </p>
+
+        <ol>
+            {% for step in steps %}
+                <li>
+                    {{ step.step.description }}
+                    <div id="ingredients-container">
+                        {% if step.ingredients %}
+                            Ingredients:
+                            <ul id="ingredients">
+                                {% for ingredient in step.ingredients %}
+                                    <li id="ingredient">
+                                        {% if ingredient.ingredient.photo %}
+                                            <img src="{{ ingredient.ingredient.photo }}" alt="ingredient photo"/>
+                                        {% endif %}
+                                        {% if ingredient.amount_type != 'x' %}
+                                            {{ ingredient.ingredient.name }} {{ ingredient.amount }}
+                                            {{ ingredient.amount_type }}
+                                        {% else %}
+                                            {{ ingredient.amount|floatformat }} {{ ingredient.ingredient.name }}
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ol>
+    </div>
+{% endblock %}
